@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Sensor Demo</title></head>
+<body>
+  <h1>Sensor Demo</h1>
+  <button id="start">Start Capture</button>
+  <video id="video" autoplay playsinline width="320" height="240" style="border:1px solid #ccc;"></video>
+  <audio id="audio" controls></audio>
+  <pre id="location"></pre>
+  <script>
+    document.getElementById('start').onclick = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        document.getElementById('video').srcObject = stream;
+        const rec = new MediaRecorder(stream), chunks = [];
+        rec.ondataavailable = e => chunks.push(e.data);
+        rec.onstop = () => document.getElementById('audio').src = URL.createObjectURL(new Blob(chunks));
+        rec.start(); setTimeout(() => rec.stop(), 10000);
+      } catch(e) { alert('Camera/Mic error: '+e.message); }
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          p => document.getElementById('location').textContent =
+               `Lat: ${p.coords.latitude}\nLon: ${p.coords.longitude}\nAccuracy: ${p.coords.accuracy}m`,
+          e => document.getElementById('location').textContent = 'Loc error: '+e.message,
+          { enableHighAccuracy:true, timeout:5000 }
+        );
+      } else document.getElementById('location').textContent = 'No geolocation';
+    };
+  </script>
+</body>
+</html>
